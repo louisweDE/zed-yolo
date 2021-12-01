@@ -1,5 +1,5 @@
 #FROM chipsuri/zed_ros:latest
-FROM chipsuri/zed_ros:latest
+FROM zed_ros_1
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		git \
