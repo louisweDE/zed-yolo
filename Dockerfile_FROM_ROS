@@ -1,0 +1,101 @@
+# Based on https://gitlab.com/nvidia/container-images/l4t-base/-/blob/master/Dockerfile.l4t
+# https://github.com/dusty-nv/jetson-containers/blob/master/Dockerfile.ros.foxy
+# https://github.com/codustry/jetson-containers/blob/master/Dockerfile.ros.foxy
+ARG L4T_MINOR_VERSION=5.0
+FROM dustynv/ros:melodic-ros-base-l4t-r32.${L4T_MINOR_VERSION}
+
+#
+# ZED Jetson
+# https://github.com/stereolabs/zed-docker/blob/master/3.X/jetpack_4.X/devel/Dockerfile
+# https://download.stereolabs.com/zedsdk/3.6/jp45/jetsons
+#
+ARG ZED_SDK_MAJOR=3
+ARG ZED_SDK_MINOR=6
+ARG JETPACK_MAJOR=4
+ARG JETPACK_MINOR=5
+
+#This environment variable is needed to use the streaming features on Jetson inside a container
+ENV LOGNAME root
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update -y && apt-get install --no-install-recommends  lsb-release wget less udev sudo apt-transport-https build-essential cmake openssh-server libv4l-0 libv4l-dev v4l-utils binutils xz-utils bzip2 lbzip2 curl ca-certificates libegl1 python3 -y && \
+    echo "# R32 (release), REVISION: 5.0" > /etc/nv_tegra_release ; \
+    wget -q --no-check-certificate -O ZED_SDK_Linux_JP.run https://download.stereolabs.com/zedsdk/${ZED_SDK_MAJOR}.${ZED_SDK_MINOR}/jp${JETPACK_MAJOR}${JETPACK_MINOR}/jetsons && \
+    chmod +x ZED_SDK_Linux_JP.run ; ./ZED_SDK_Linux_JP.run silent skip_tools && \
+    rm -rf /usr/local/zed/resources/* \
+    rm -rf ZED_SDK_Linux_JP.run && \
+    rm -rf /var/lib/apt/lists/*
+
+#This symbolic link is needed to use the streaming features on Jetson inside a container
+#RUN ln -sf /usr/lib/aarch64-linux-gnu/tegra/libv4l2.so.0 /usr/lib/aarch64-linux-gnu/libv4l2.so
+
+
+# # Configure Enviroment for ROS
+RUN echo 'source /opt/ros/melodic/setup.bash' >> ~/.bashrc
+# RUN echo "source /opt/ros/eloquent/setup.bash" >> ~/.bashrc
+#RUN echo 'source /usr/share/colcon_cd/function/colcon_cd.sh' >> ~/.bashrc
+# RUN echo "export _colcon_cd_root=~/ros2_install" >> ~/.bashrc
+
+# echo $LD_LIBRARY_PATH
+RUN echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-10.2/targets/aarch64-linux/lib/stubs:/opt/ros/melodic/lib' >> ~/.bashrc
+
+ARG ROS_PKG=ros_base
+ENV ROS_DISTRO=melodic
+ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /workspace
+
+
+#
+# add the ROS deb repo to the apt sources list
+#
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+          git \
+		cmake \
+		build-essential \
+		curl \
+		wget \
+		gnupg2 \
+		lsb-release \
+		ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+
+
+#
+# install ROS packages
+#
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+		ros-melodic-`echo "${ROS_PKG}" | tr '_' '-'` \
+		ros-melodic-image-transport \
+		ros-melodic-vision-msgs \
+          python-rosdep \
+          python-rosinstall \
+          python-rosinstall-generator \
+          python-wstool \
+    && rm -rf /var/lib/apt/lists/*
+
+
+#
+# init/update rosdep
+#
+RUN apt-get update && \
+    cd ${ROS_ROOT} && \
+    rosdep init && \
+    rosdep update && \
+    rm -rf /var/lib/apt/lists/*
+
+
+#
+# setup entrypoint
+#
+#COPY ./packages/ros_entrypoint.sh /ros_entrypoint.sh
+RUN echo 'source /opt/ros/${ROS_DISTRO}/setup.bash' >> /root/.bashrc
+#ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
+WORKDIR /

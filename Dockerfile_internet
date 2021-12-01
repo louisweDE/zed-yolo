@@ -1,0 +1,79 @@
+FROM nvidia/cuda:8.0-devel-ubuntu14.04
+# setup environment
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+
+# setup sources.list
+RUN echo "deb http://packages.ros.org/ros/ubuntu trusty main" > /etc/apt/sources.list.d/ros-latest.list
+
+# install bootstrap tools
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    python-rosdep \
+    python-rosinstall \
+    python-vcstools \
+    && rm -rf /var/lib/apt/lists/*
+
+# bootstrap rosdep
+RUN rosdep init \
+    && rosdep update
+
+# install ros packages
+ENV ROS_DISTRO indigo
+RUN apt-get update && apt-get install -y \
+    ros-indigo-desktop-full=1.1.4-0* \
+    && rm -rf /var/lib/apt/lists/*
+
+# setup entrypoint
+COPY ./ros_entrypoint.sh /
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
+
+# ros-indigo-ros-base
+RUN apt-get update && apt-get install -y \
+    ros-indigo-ros-base=1.1.4-0* \
+&& rm -rf /var/lib/apt/lists/*
+
+# moveit-indigo-ci
+ENV TERM xterm
+
+# Setup catkin workspace
+ENV CATKIN_WS=/root/ws_moveit
+RUN mkdir -p $CATKIN_WS/src
+WORKDIR $CATKIN_WS/src
+
+# Commands are combined in single RUN statement with "apt/lists" folder removal to reduce image size
+RUN wstool init . && \
+    # Download moveit source so that we can get necessary dependencies
+    wstool merge https://raw.githubusercontent.com/ros-planning/moveit/${ROS_DISTRO}-devel/moveit.rosinstall && \
+    wstool update && \
+    # Update apt-get because previous images clear this cache
+    apt-get -qq update && \
+    # Install some base dependencies
+    apt-get -qq install -y \
+        # Required for rosdep command
+        sudo \
+        # Required for installing dependencies
+        python-rosdep \
+        # Preferred build tool
+        python-catkin-tools \
+        # Not sure if necessary:
+        ros-$ROS_DISTRO-rosbash \
+        ros-$ROS_DISTRO-rospack && \
+    # Download all dependencies of MoveIt!
+    rosdep update && \
+    rosdep install -y --from-paths . --ignore-src --rosdistro ${ROS_DISTRO} --as-root=apt:false && \
+    # Remove the source code from this container. TODO: in the future we may want to keep this here for further optimization of later containers
+    cd .. && \
+    rm -rf src/ && \
+    # Clear apt-cache to reduce image size
+    rm -rf /var/lib/apt/lists/*
+
+# Continous Integration Setting
+ENV IN_DOCKER 1
+
+# moveit-indigo-release
+RUN apt-get update && \
+    apt-get install -y \
+        ros-${ROS_DISTRO}-moveit-* && \
+rm -rf /var/lib/apt/lists/*
