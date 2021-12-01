@@ -1,4 +1,5 @@
 #FROM chipsuri/zed_ros:latest
+#use name of local image for zed_ros
 FROM zed_ros_1
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
