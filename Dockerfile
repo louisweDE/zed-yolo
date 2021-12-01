@@ -67,4 +67,4 @@ CMD ["bash"]
 WORKDIR /
 
 RUN pip3 install scikit-build
-    python3 -m pip install opencv-python pyopengl
+    pip3 install opencv-python pyopengl
