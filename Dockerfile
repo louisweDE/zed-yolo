@@ -19,6 +19,8 @@ RUN apt-get update && \
 		cmake \
 		build-essential \
 		curl \
+		nano \
+		python3-pip \
 		wget \
 		gnupg2 \
 		lsb-release \
@@ -63,3 +65,6 @@ RUN echo 'source /opt/ros/${ROS_DISTRO}/setup.bash' >> /root/.bashrc
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 WORKDIR /
+
+RUN pip3 install scikit-build
+    python3 -m pip install opencv-python pyopengl
