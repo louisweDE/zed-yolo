@@ -1,5 +1,5 @@
-#FROM chipsuri/zed_ros:latest
-#use name of local image for zed_ros
+# Specify the parent image from which we build
+# to use with Dockerfile_ZED_ROS use name of local zed_ros image
 FROM zed_ros_1
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
