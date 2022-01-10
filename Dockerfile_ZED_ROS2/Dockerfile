@@ -76,7 +76,8 @@ RUN python3 -m pip install -U \
 		flake8-quotes \
 		pytest-repeat \
 		pytest-rerunfailures \
-		pytest
+		pytest \
+		setuptools
 
 
 #
@@ -84,52 +85,56 @@ RUN python3 -m pip install -U \
 #
 RUN mkdir -p ${ROS_ROOT}/src && \
     cd ${ROS_ROOT} && \
+    wget https://raw.githubusercontent.com/ros2/ros2/galactic/ros2.repos && \
+    vcs import src < ros2.repos && \
 
     # https://answers.ros.org/question/325245/minimal-ros2-installation/?answer=325249#post-id-325249
-    rosinstall_generator --deps --rosdistro ${ROS_DISTRO} ${ROS_PKG} \
-		launch_xml \
-		launch_yaml \
-		launch_testing \
-		launch_testing_ament_cmake \
-		demo_nodes_cpp \
-		demo_nodes_py \
-		example_interfaces \
-		camera_calibration_parsers \
-		camera_info_manager \
-		cv_bridge \
-		v4l2_camera \
-		vision_opencv \
-		vision_msgs \
-		image_geometry \
-		image_pipeline \
-		image_transport \
-		compressed_image_transport \
-		compressed_depth_image_transport \
-		> ros2.${ROS_DISTRO}.${ROS_PKG}.rosinstall && \
-    cat ros2.${ROS_DISTRO}.${ROS_PKG}.rosinstall && \
-    vcs import src < ros2.${ROS_DISTRO}.${ROS_PKG}.rosinstall && \
+#    rosinstall_generator --deps --rosdistro ${ROS_DISTRO} ${ROS_PKG} \
+#		launch_xml \
+#		launch_yaml \
+#		launch_testing \
+#		launch_testing_ament_cmake \
+#		demo_nodes_cpp \
+#		demo_nodes_py \
+#		example_interfaces \
+#		camera_calibration_parsers \
+#		camera_info_manager \
+#		cv_bridge \
+#		v4l2_camera \
+#		vision_opencv \
+#		vision_msgs \
+#		image_geometry \
+#		image_pipeline \
+#		image_transport \
+#		compressed_image_transport \
+#		compressed_depth_image_transport \
+#		> ros2.${ROS_DISTRO}.${ROS_PKG}.rosinstall && \
+#    cat ros2.${ROS_DISTRO}.${ROS_PKG}.rosinstall && \
+
+#    vcs import src < ros2.${ROS_DISTRO}.${ROS_PKG}.rosinstall && \
 
     # install dependencies using rosdep
-    apt-get update && \
-    cd ${ROS_ROOT} && \
+#    apt-get update && \
+#    cd ${ROS_ROOT} && \
     rosdep init && \
     rosdep update && \
     rosdep install -y \
     	  --ignore-src \
        --from-paths src \
 	  --rosdistro ${ROS_DISTRO} \
-	  --skip-keys "libopencv-dev libopencv-contrib-dev libopencv-imgproc-dev python-opencv python3-opencv" && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get clean && \
-
-    # build it!
-    colcon build --merge-install && \
-
-    # remove build files
-    rm -rf ${ROS_ROOT}/src && \
-    rm -rf ${ROS_ROOT}/logs && \
-    rm -rf ${ROS_ROOT}/build && \
-    rm ${ROS_ROOT}/*.rosinstall
+	  --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers" && \
+#	  --skip-keys "libopencv-dev libopencv-contrib-dev libopencv-imgproc-dev python-opencv python3-opencv" && \
+#    rm -rf /var/lib/apt/lists/* && \
+#    apt-get clean && \
+#
+#    # build it!
+#    colcon build --merge-install && \
+#
+#    # remove build files
+#    rm -rf ${ROS_ROOT}/src && \
+#    rm -rf ${ROS_ROOT}/logs && \
+#    rm -rf ${ROS_ROOT}/build && \
+#    rm ${ROS_ROOT}/*.rosinstall
 
 
 #
@@ -149,7 +154,7 @@ RUN mkdir -p ${ROS_ROOT}/src && \
 # Set the default DDS middleware to cyclonedds
 # https://github.com/ros2/rclcpp/issues/1335
 #
-ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+#ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 
 #
@@ -161,9 +166,7 @@ RUN sed -i \
     's/ros_env_setup="\/opt\/ros\/$ROS_DISTRO\/setup.bash"/ros_env_setup="${ROS_ROOT}\/install\/setup.bash"/g' \
     /ros_entrypoint.sh && \
     cat /ros_entrypoint.sh
-
 RUN echo 'source ${ROS_ROOT}/install/setup.bash' >> /root/.bashrc
-
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 WORKDIR /
