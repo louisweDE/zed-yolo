@@ -85,25 +85,25 @@ RUN python3 -m pip install -U \
 #
 # install OpenCV (with CUDA)
 #
-#ARG OPENCV_URL=https://nvidia.box.com/shared/static/5v89u6g5rb62fpz4lh0rz531ajo2t5ef.gz
-#ARG OPENCV_DEB=OpenCV-4.5.0-aarch64.tar.gz
-#
-#RUN apt-get purge -y '*opencv*' || echo "previous OpenCV installation not found" && \
-#    mkdir opencv && \
-#    cd opencv && \
-#    wget --quiet --show-progress --progress=bar:force:noscroll --no-check-certificate ${OPENCV_URL} -O ${OPENCV_DEB} && \
-#    tar -xzvf ${OPENCV_DEB} && \
-#    dpkg -i --force-depends *.deb && \
-#    apt-get update && \
-#    apt-get install -y -f --no-install-recommends && \
-#    dpkg -i *.deb && \
-#    rm -rf /var/lib/apt/lists/* && \
-#    apt-get clean && \
-#    cd ../ && \
-#    rm -rf opencv && \
-#    cp -r /usr/include/opencv4 /usr/local/include/opencv4 && \
-#    cp -r /usr/lib/python3.6/dist-packages/cv2 /usr/local/lib/python3.6/dist-packages/cv2
-#
+ARG OPENCV_URL=https://nvidia.box.com/shared/static/5v89u6g5rb62fpz4lh0rz531ajo2t5ef.gz
+ARG OPENCV_DEB=OpenCV-4.5.0-aarch64.tar.gz
+
+RUN apt-get purge -y '*opencv*' || echo "previous OpenCV installation not found" && \
+    mkdir opencv && \
+    cd opencv && \
+    wget --quiet --show-progress --progress=bar:force:noscroll --no-check-certificate ${OPENCV_URL} -O ${OPENCV_DEB} && \
+    tar -xzvf ${OPENCV_DEB} && \
+    dpkg -i --force-depends *.deb && \
+    apt-get update && \
+    apt-get install -y -f --no-install-recommends && \
+    dpkg -i *.deb && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean && \
+    cd ../ && \
+    rm -rf opencv && \
+    cp -r /usr/include/opencv4 /usr/local/include/opencv4 && \
+    cp -r /usr/lib/python3.6/dist-packages/cv2 /usr/local/lib/python3.6/dist-packages/cv2
+
 
 #
 # download/build ROS from source
