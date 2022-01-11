@@ -5,8 +5,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		git \
 		nano \
-		pkg-config \
-		libopencv-dev
+		pkg-config
+#		libopencv-dev
 RUN cd /root && git clone https://github.com/AlexeyAB/darknet
 # && cd darknet
 
