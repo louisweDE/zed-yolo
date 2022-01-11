@@ -2,7 +2,7 @@
 # this dockerfile roughly follows the 'Install ROS From Source' procedures from:
 #   https://docs.ros.org/en/galactic/Installation/Ubuntu-Development-Setup.html
 #
-FROM stereolabs/zed:3.6-py-devel-jetson-jp4.6
+ARG BASE_IMAGE=stereolabs/zed:3.6-py-devel-jetson-jp4.6
 FROM ${BASE_IMAGE}
 
 ARG ROS_PKG=ros_base
