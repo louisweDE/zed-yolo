@@ -122,7 +122,7 @@ RUN mkdir -p ${ROS_ROOT}/src && \
 		example_interfaces \
 		camera_calibration_parsers \
 		camera_info_manager \
-		cv_bridge \
+#		cv_bridge \
 		v4l2_camera \
 		vision_opencv \
 		vision_msgs \
