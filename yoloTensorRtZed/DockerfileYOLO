@@ -4,6 +4,13 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt update
 
+RUN echo "install cmake"
+RUN apt install -y software-properties-common && \
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add - && \
+    apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
+    apt-get update && \
+    apt-get install -y cmake
+
 RUN echo "INSTALL OPENCV"
 RUN apt-get install -y build-essential \
     unzip \
@@ -25,37 +32,47 @@ RUN apt-get install -y build-essential \
     libdc1394-22-dev \
     libavresample-dev \
     libssl-dev
-RUN cd && wget https://github.com/opencv/opencv/archive/4.3.0.tar.gz && tar -xf 4.3.0.tar.gz && rm *.tar.gz
-RUN cd && wget https://github.com/opencv/opencv_contrib/archive/4.3.0.tar.gz && tar -xf 4.3.0.tar.gz && rm *.tar.gz
 
+RUN apt-add-repository universe && apt-key adv --refresh-keys --keyserver keyserver.ubuntu.com
+RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports xenial-security main"
+RUN add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports impish main"
+RUN apt update
 
+RUN apt install -y libglew-dev \
+                   zlib1g-dev \
+                   libjasper-dev \
+                   libavutil-dev \
+                   libpostproc-dev \
+                   libeigen3-dev \
+                   libtbb-dev
 
-RUN echo "install cmake"
-RUN apt install -y software-properties-common && \
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add - && \
-    apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main' && \
-    apt-get update && \
-    apt-get install -y cmake
+RUN cd && wget https://github.com/opencv/opencv/archive/4.5.5.tar.gz && tar -xf 4.5.5.tar.gz && rm *.tar.gz
+RUN cd && wget https://github.com/opencv/opencv_contrib/archive/4.5.5.tar.gz && tar -xf 4.5.5.tar.gz && rm *.tar.gz
+
+RUN pip3 install wheel numpy
 
 RUN cd && \
-    cd opencv-4.3.0 && mkdir build && cd build && \
-    cmake -D CMAKE_BUILD_TYPE=RELEASE \
-    -D CMAKE_INSTALL_PREFIX=/usr/local \
-    -D INSTALL_PYTHON_EXAMPLES=OFF \
-    -D INSTALL_C_EXAMPLES=OFF \
-    -D OPENCV_EXTRA_MODULES_PATH='~/opencv_contrib-4.3.0/modules' \
-    -D BUILD_EXAMPLES=OFF \
-    -D WITH_CUDA=ON \
-    -D CUDA_ARCH_BIN=7.2 \
-    -D CUDA_ARCH_PTX="" \
-    -D ENABLE_FAST_MATH=ON \
-    -D CUDA_FAST_MATH=ON \
-    -D WITH_CUBLAS=ON \
-    -D WITH_LIBV4L=ON \
-    -D WITH_GSTREAMER=ON \
-    -D WITH_GSTREAMER_0_10=OFF \
-    -D WITH_TBB=ON \
-    ../ && make -j12 && make install
+    cd opencv-4.5.5 && mkdir build && cd build && \
+    cmake  \
+    -D CMAKE_BUILD_TYPE=RELEASE \
+        -D CMAKE_INSTALL_PREFIX=/usr/local \
+        -D INSTALL_PYTHON_EXAMPLES=ON \
+        -D INSTALL_C_EXAMPLES=OFF \
+        -D OPENCV_EXTRA_MODULES_PATH='~/opencv_contrib-4.5.5/modules' \
+        -D BUILD_EXAMPLES=ON \
+        -D WITH_CUDA=ON \
+        -D CUDA_ARCH_BIN='7.2 5.2 6.2' \
+        -D CUDA_ARCH_PTX="" \
+        -D PYTHON_EXECUTABLE='python3' \
+        -D ENABLE_FAST_MATH=ON \
+        -D CUDA_FAST_MATH=ON \
+        -D WITH_CUBLAS=ON \
+        -D WITH_LIBV4L=ON \
+        -D WITH_GSTREAMER=ON \
+        -D WITH_GSTREAMER_0_10=OFF \
+        -D WITH_TBB=ON \
+        ../
+RUN make -j4 && make install
 RUN apt clean
 
 RUN echo "build tkDNN"
